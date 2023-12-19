@@ -47,17 +47,15 @@ func main() {
 	// check if remote write is enabled
 	var rwUrl string
 	rw := config.RemoteWrite
-	fmt.Println(rw.enabled)
-	fmt.Println(rw.url)
-	if rw.enabled && rw.url != nil {
-		rwUrl = *rw.url
+	if rw.Enabled && rw.Url != nil {
+		rwUrl = *rw.Url
 	}
 
 	// start metrics
 	ctx := context.Background()
 	metrics := newMetrics(rwUrl)
 	defer metrics.shutdown(ctx)
-	if rw.enabled {
+	if rw.Enabled {
 		go metrics.remoteWriteThread(ctx, time.Second*10)
 	}
 
@@ -73,7 +71,6 @@ func main() {
 	}
 
 	// connect to nats
-	fmt.Println(config.Nats.url)
 	opts := []nats.Option{nats.Name("Wasabi NATS Load Test")}
 
 	nc, err := nats.Connect(*urls, opts...)
@@ -117,7 +114,6 @@ func main() {
 	}()
 
 	for task := range resultChan {
-
 		// count total tasks and task errors
 		success := task.err == nil
 		metrics.incSubmit(success, task.subject)
@@ -132,9 +128,9 @@ func main() {
 
 	var totalOk uint64
 	var totalErr uint64
+	fmt.Println("-- report --")
 	for _, sub := range metrics.subjects {
 		ok, e := sub.submissionsSuccess.get(), sub.submissionsFailure.get()
-		fmt.Println("-- report --")
 		fmt.Printf("%s | ok %d | err %d |\n", sub.subject, ok, e)
 		totalOk += ok
 		totalErr += e
