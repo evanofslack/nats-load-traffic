@@ -1,0 +1,25 @@
+remote_write:
+  enabled: true
+  url: http://localhost:9090/api/v1/write
+
+nats:
+  url: nats://127.0.0.1:4222
+
+profiles:
+  - name: job-1
+    subject: test.1
+    load: periodic
+    rate: 60
+    duration: 30s
+
+  - name: job-2
+    subject: test.2
+    load: periodic
+    rate: 100
+    duration: 60s
+
+  - name: job-3
+    subject: test.3
+    load: random
+    rate: 10
+    duration: 60s
