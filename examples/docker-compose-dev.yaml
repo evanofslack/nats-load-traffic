@@ -1,0 +1,40 @@
+version: "3.7"
+
+services:
+  nats-load-traffic:
+    build: ../.
+    restart: unless-stopped
+    container_name: nats-load-traffic
+    depends_on:
+      - nats
+      - prometheus
+    volumes:
+      - ./config:/etc/nats-load-traffic
+    command: -c /etc/nats-load-traffic/config.yaml
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./config:/etc/prometheus
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+      - "--web.enable-remote-write-receiver"
+    ports:
+      - 9090:9090
+
+  nats:
+    image: nats:latest
+    container_name: nats
+    ports:
+      - "8222:8222"
+      - "4222:4222"
+    command: "--http_port 8222 --js"
+    volumes:
+      - nats_data:/data
+
+volumes:
+  prometheus-data:
+  nats_data:
