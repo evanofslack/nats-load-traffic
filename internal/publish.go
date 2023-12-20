@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"time"
 
@@ -55,25 +56,25 @@ func (w *worker) publishSync(ctx context.Context, task Task) {
 	ack, err := w.js.Publish(ctx, task.Subject, task.payload)
 	if err != nil {
 		task.Err = err
-		fmt.Println(err)
+		slog.Warn("error during publish", slog.String("err", err.Error()))
 	} else {
-		fmt.Printf("published msg | seq [%d|%d] | subject %s\n", task.seq, ack.Sequence, task.Subject)
+		slog.Debug("published msg", slog.Int("task_seq", task.seq), slog.Int("nats_seq", int(ack.Sequence)), slog.String("subject", task.Subject))
 	}
 }
 
 func publishAsync(js jetstream.JetStream, task Task) {
 	ackF, err := js.PublishAsync(task.Subject, task.payload)
 	if err != nil {
-		fmt.Println(err)
+		slog.Warn("error during publish", slog.String("err", err.Error()))
 	}
 
 	go func() {
 		select {
 		case ack := <-ackF.Ok():
 			task.Err = err
-			fmt.Printf("published msg | seq [%d|%d] | subject %s\n", task.seq, ack.Sequence, task.Subject)
+			slog.Debug("published msg", slog.Int("task_seq", task.seq), slog.Int("nats_seq", int(ack.Sequence)), slog.String("subject", task.Subject))
 		case err := <-ackF.Err():
-			fmt.Println(err)
+			slog.Warn("error during publish", slog.String("err", err.Error()))
 		}
 	}()
 }
@@ -105,7 +106,7 @@ func (p *producer) Run(ctx context.Context, taskChan chan Task) {
 	defer close(taskChan)
 	timeout := time.After(p.duration)
 	seq := 0
-	fmt.Printf("profile %s | load %s | duration %s\n", p.name, p.load, p.duration)
+	slog.Debug("starting profile", slog.String("name", p.name), slog.String("load", p.load.String()), slog.String("duration", p.duration.String()))
 
 	// setup some state for periodic load profile
 	periodicSend := true
@@ -121,7 +122,7 @@ func (p *producer) Run(ctx context.Context, taskChan chan Task) {
 			ticker := time.NewTicker(interval)
 			defer ticker.Stop()
 
-			fmt.Printf("profile %s setting periodic interval %s\n", p.name, interval)
+			slog.Debug(fmt.Sprintf("setting profile interval %s", interval), slog.String("name", p.name), slog.String("load", p.load.String()), slog.String("duration", p.duration.String()))
 			for {
 				select {
 				case <-ctx.Done():
@@ -148,7 +149,7 @@ func (p *producer) Run(ctx context.Context, taskChan chan Task) {
 			ticker := time.NewTicker(interval)
 			defer ticker.Stop()
 
-			fmt.Printf("profile %s setting random interval %s\n", p.name, interval)
+			slog.Debug(fmt.Sprintf("setting profile interval %s", interval), slog.String("name", p.name), slog.String("load", p.load.String()), slog.String("duration", p.duration.String()))
 			for {
 				select {
 				case <-ctx.Done():
@@ -180,13 +181,12 @@ func (p *producer) Run(ctx context.Context, taskChan chan Task) {
 			ticker := time.NewTicker(interval)
 			defer ticker.Stop()
 
-			fmt.Printf("profile %s setting rare interval %s\n", p.name, interval)
+			slog.Debug(fmt.Sprintf("setting profile interval %s", interval), slog.String("name", p.name), slog.String("load", p.load.String()), slog.String("duration", p.duration.String()))
 			for {
 				select {
 				case <-ctx.Done():
 					return
 				case <-ticker.C:
-					fmt.Printf("checking rare\n")
 					if rand.Intn(15) == 1 {
 						rareSend = true
 					} else {
@@ -198,11 +198,12 @@ func (p *producer) Run(ctx context.Context, taskChan chan Task) {
 	}
 
 	for {
+		seq++
 		select {
 		case <-ctx.Done():
 			return
 		case <-timeout:
-			fmt.Printf("profile %s finished after %s\n", p.name, p.duration)
+			slog.Debug(fmt.Sprintf("profile finished after %s", p.duration), slog.String("name", p.name), slog.String("load", p.load.String()), slog.String("duration", p.duration.String()))
 			return
 		default:
 			switch p.load {

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -67,7 +68,13 @@ type Profile struct {
 	Duration time.Duration `yaml:"duration"`
 }
 
+type Log struct {
+	Level string `yaml:"level"`
+	Env   string `yaml:"env"`
+}
+
 type Config struct {
+	Log         Log         `yaml:"log"`
 	RemoteWrite RemoteWrite `yaml:"remote_write"`
 	Nats        Nats        `yaml:"nats"`
 	Profiles    []Profile   `yaml:"profiles"`
@@ -76,7 +83,7 @@ type Config struct {
 func NewConfig(configPath string) (*Config, error) {
 	config := &Config{}
 
-	fmt.Printf("loading config from %s\n", configPath)
+	slog.Info(fmt.Sprintf("loading config from %s", configPath))
 	file, err := os.Open(configPath)
 	if err != nil {
 		return nil, err
@@ -87,14 +94,5 @@ func NewConfig(configPath string) (*Config, error) {
 	if err := d.Decode(&config); err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("loaded config with %d profiles\n", len(config.Profiles))
-	fmt.Printf("nats url: %s\n", config.Nats.Url)
-	wr := config.RemoteWrite
-	fmt.Printf("remote write: %t\n", wr.Enabled)
-	if wr.Url != nil {
-		fmt.Printf("remote write url: %s\n", *wr.Url)
-	}
-
 	return config, nil
 }

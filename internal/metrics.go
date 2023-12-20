@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -177,7 +178,7 @@ func (m *metrics) toTimeSeries() []promwrite.TimeSeries {
 }
 
 func (m *metrics) remoteWrite(ctx context.Context) error {
-	fmt.Println("sending remote write request")
+	slog.Debug("sending remote write request")
 	times := m.toTimeSeries()
 	req := &promwrite.WriteRequest{
 		TimeSeries: times,
@@ -187,7 +188,7 @@ func (m *metrics) remoteWrite(ctx context.Context) error {
 }
 
 func (m *metrics) RemoteWriteThread(ctx context.Context, interval time.Duration) {
-	fmt.Println("starting remote write thread")
+	slog.Debug("starting remote write thread")
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	// try to do a final write when exiting
