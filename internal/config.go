@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"fmt"
@@ -33,7 +33,7 @@ func (l load) String() string {
 	return "unknown"
 }
 
-func loadFromString(s string) (load, error) {
+func LoadFromString(s string) (load, error) {
 	switch strings.ToLower(s) {
 	case "constant":
 		return Constant, nil
@@ -47,15 +47,16 @@ func loadFromString(s string) (load, error) {
 	return Unknown, fmt.Errorf("unknown load type: %s", s)
 }
 
-const defaultLoad = Constant
+const DefaultLoad = Constant
 
 type Nats struct {
 	Url string `yaml:"url"`
 }
 
 type RemoteWrite struct {
-	Enabled bool    `yaml:"enabled"`
-	Url     *string `yaml:"url"`
+	Enabled  bool           `yaml:"enabled"`
+	Url      *string        `yaml:"url"`
+	Interval *time.Duration `yaml:"interval"`
 }
 
 type Profile struct {
@@ -72,7 +73,7 @@ type Config struct {
 	Profiles    []Profile   `yaml:"profiles"`
 }
 
-func newConfig(configPath string) (*Config, error) {
+func NewConfig(configPath string) (*Config, error) {
 	config := &Config{}
 
 	fmt.Printf("loading config from %s\n", configPath)

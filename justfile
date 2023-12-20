@@ -5,13 +5,13 @@ test:
     go test ./...
 
 build:
-    go build
+    cd cmd/nats-load-traffic && go build
 
 tidy:
     go mod tidy
 
 run: build
-    ./nats-load-traffic -c examples/config/config.yaml
+    ./cmd/nats-load-traffic/nats-load-traffic -c examples/config/config.yaml
 
 up:
     cd examples && docker compose -f docker-compose-dev.yaml up -d && docker compose -f docker-compose-dev.yaml logs --follow

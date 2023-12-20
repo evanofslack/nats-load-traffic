@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"context"
@@ -10,18 +10,18 @@ import (
 	"go.uber.org/ratelimit"
 )
 
-type task struct {
+type Task struct {
 	seq      int
-	subject  string
+	Subject  string
 	payload  []byte
 	duration time.Duration
-	err      error
+	Err      error
 }
 
-func newTask(seq int, subject string, payload []byte) task {
-	t := task{
+func newTask(seq int, subject string, payload []byte) Task {
+	t := Task{
 		seq:     seq,
-		subject: subject,
+		Subject: subject,
 		payload: payload,
 	}
 	return t
@@ -32,7 +32,7 @@ type worker struct {
 	subject string
 }
 
-func newWorker(js jetstream.JetStream, subject string) worker {
+func NewWorker(js jetstream.JetStream, subject string) worker {
 	w := worker{
 		js:      js,
 		subject: subject,
@@ -40,7 +40,7 @@ func newWorker(js jetstream.JetStream, subject string) worker {
 	return w
 }
 
-func (w *worker) run(ctx context.Context, taskChan <-chan task, resultChan chan<- task) {
+func (w *worker) Run(ctx context.Context, taskChan <-chan Task, resultChan chan<- Task) {
 	for task := range taskChan {
 		start := time.Now()
 
@@ -51,18 +51,18 @@ func (w *worker) run(ctx context.Context, taskChan <-chan task, resultChan chan<
 	}
 }
 
-func (w *worker) publishSync(ctx context.Context, task task) {
-	ack, err := w.js.Publish(ctx, task.subject, task.payload)
+func (w *worker) publishSync(ctx context.Context, task Task) {
+	ack, err := w.js.Publish(ctx, task.Subject, task.payload)
 	if err != nil {
-		task.err = err
+		task.Err = err
 		fmt.Println(err)
 	} else {
-		fmt.Printf("published msg | seq [%d|%d] | subject %s\n", task.seq, ack.Sequence, task.subject)
+		fmt.Printf("published msg | seq [%d|%d] | subject %s\n", task.seq, ack.Sequence, task.Subject)
 	}
 }
 
-func publishAsync(js jetstream.JetStream, task task) {
-	ackF, err := js.PublishAsync(task.subject, task.payload)
+func publishAsync(js jetstream.JetStream, task Task) {
+	ackF, err := js.PublishAsync(task.Subject, task.payload)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -70,8 +70,8 @@ func publishAsync(js jetstream.JetStream, task task) {
 	go func() {
 		select {
 		case ack := <-ackF.Ok():
-			task.err = err
-			fmt.Printf("published msg | seq [%d|%d] | subject %s\n", task.seq, ack.Sequence, task.subject)
+			task.Err = err
+			fmt.Printf("published msg | seq [%d|%d] | subject %s\n", task.seq, ack.Sequence, task.Subject)
 		case err := <-ackF.Err():
 			fmt.Println(err)
 		}
@@ -88,7 +88,7 @@ type producer struct {
 	duration time.Duration
 }
 
-func newProducer(js jetstream.JetStream, name, subject string, payload []byte, load load, duration time.Duration, rate int) producer {
+func NewProducer(js jetstream.JetStream, name, subject string, payload []byte, load load, duration time.Duration, rate int) producer {
 	p := producer{
 		rl:       ratelimit.New(rate, ratelimit.Per(60*time.Second)),
 		js:       js,
@@ -101,7 +101,7 @@ func newProducer(js jetstream.JetStream, name, subject string, payload []byte, l
 	return p
 }
 
-func (p *producer) run(ctx context.Context, taskChan chan task) {
+func (p *producer) Run(ctx context.Context, taskChan chan Task) {
 	defer close(taskChan)
 	timeout := time.After(p.duration)
 	seq := 0
@@ -186,7 +186,8 @@ func (p *producer) run(ctx context.Context, taskChan chan task) {
 				case <-ctx.Done():
 					return
 				case <-ticker.C:
-					if rand.Intn(100) == 1 {
+					fmt.Printf("checking rare\n")
+					if rand.Intn(15) == 1 {
 						rareSend = true
 					} else {
 						rareSend = false
@@ -228,7 +229,7 @@ func (p *producer) run(ctx context.Context, taskChan chan task) {
 	}
 }
 
-func (p *producer) send(taskChan chan task, seq int) {
+func (p *producer) send(taskChan chan Task, seq int) {
 	p.rl.Take()
 	task := newTask(seq, p.subject, p.payload)
 	taskChan <- task

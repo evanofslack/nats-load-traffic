@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"context"
@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	namespace = "nats_load_traffic"
+	namespace            = "nats_load_traffic"
+	DefaultWriteInterval = time.Second * 15
 )
 
 type counter struct {
@@ -62,7 +63,7 @@ type metrics struct {
 	writer   remoteWriter
 }
 
-func newMetrics(remoteWriteUrl string) *metrics {
+func NewMetrics(remoteWriteUrl string) *metrics {
 	var writer remoteWriter
 	if remoteWriteUrl == "" {
 		writer.enabled = false
@@ -95,13 +96,31 @@ func (m *metrics) getSubjectMetrics(subject string) *subjectMetrics {
 	return sm
 }
 
-func (m *metrics) incSubmit(success bool, subject string) {
+func (m *metrics) IncSubmit(success bool, subject string) {
 	sm := m.getSubjectMetrics(subject)
 	if success {
 		sm.submissionsSuccess.inc(1)
 	} else {
 		sm.submissionsFailure.inc(1)
 	}
+}
+
+type Report struct {
+	Subject string
+	Success uint64
+	Failure uint64
+}
+
+func (m *metrics) Report() []Report {
+	reports := []Report{}
+	for _, sub := range m.subjects {
+		reports = append(reports, Report{
+			Subject: sub.subject,
+			Success: sub.submissionsSuccess.get(),
+			Failure: sub.submissionsFailure.get(),
+		})
+	}
+	return reports
 }
 
 func (m *metrics) toTimeSeries() []promwrite.TimeSeries {
@@ -167,7 +186,7 @@ func (m *metrics) remoteWrite(ctx context.Context) error {
 	return err
 }
 
-func (m *metrics) remoteWriteThread(ctx context.Context, interval time.Duration) {
+func (m *metrics) RemoteWriteThread(ctx context.Context, interval time.Duration) {
 	fmt.Println("starting remote write thread")
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -183,7 +202,7 @@ func (m *metrics) remoteWriteThread(ctx context.Context, interval time.Duration)
 	}
 }
 
-func (m *metrics) shutdown(ctx context.Context) {
+func (m *metrics) Shutdown(ctx context.Context) {
 	if m.writer.enabled {
 		m.remoteWrite(ctx)
 	}
