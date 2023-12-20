@@ -1,6 +1,7 @@
 remote_write:
   enabled: true
   url: http://localhost:9090/api/v1/write
+  interval: 5s
 
 nats:
   url: nats://127.0.0.1:4222
@@ -8,18 +9,24 @@ nats:
 profiles:
   - name: job-1
     subject: test.1
-    load: periodic
-    rate: 60
-    duration: 30s
+    load: rare
+    rate: 1000
+    duration: 1000s
 
   - name: job-2
     subject: test.2
     load: periodic
-    rate: 100
-    duration: 60s
+    rate: 1000
+    duration: 1000s
 
   - name: job-3
     subject: test.3
     load: random
-    rate: 10
-    duration: 60s
+    rate: 1000
+    duration: 1000s
+
+  - name: job-4
+    subject: test.4
+    load: constant
+    rate: 1000
+    duration: 1000s
