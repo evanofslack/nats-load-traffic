@@ -118,9 +118,9 @@ func Run(configPath, payloadPath string) {
 	var totalErr uint64
 	slog.Info("-- report --")
 	for _, sub := range metrics.Report() {
-		slog.Info("%s | ok %d | err %d |\n", sub.Subject, sub.Success, sub.Failure)
+		slog.Info(fmt.Sprintf("%s | ok %d | err %d |\n", sub.Subject, sub.Success, sub.Failure))
 		totalOk += sub.Success
 		totalErr += sub.Failure
 	}
-	slog.Info("TOTAL | ok %d | err %d |\n", totalOk, totalErr)
+	slog.Info(fmt.Sprintf("TOTAL | ok %d | err %d |\n", totalOk, totalErr))
 }
