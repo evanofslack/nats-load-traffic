@@ -10,6 +10,9 @@ build:
 tidy:
     go mod tidy
 
+check:
+    go vet ./...
+
 run: build
     ./cmd/nats-load-traffic/nats-load-traffic -c examples/config/config.yaml
 
