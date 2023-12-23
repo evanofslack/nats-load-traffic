@@ -4,11 +4,11 @@ log:
 
 remote_write:
   enabled: true
-  url: http://prometheus:9090/api/v1/write
+  url: http://localhost:9090/api/v1/write
   interval: 5s
 
 nats:
-  url: nats://nats:4222
+  url: nats://localhost:4222
 
 profiles:
   - name: job-1
