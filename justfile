@@ -20,7 +20,7 @@ up:
     cd examples && docker compose -f docker-compose-dev.yaml up -d && docker compose -f docker-compose-dev.yaml logs --follow
 
 upb:
-    cd examples && docker compose -f docker-compose-dev.yaml up -d --build --force-recreate && docker compose logs --follow
+    cd examples && docker compose -f docker-compose-dev.yaml up -d --build --force-recreate && docker compose -f docker-compose-dev.yaml logs --follow
 
 down:
     cd examples && docker compose -f docker-compose-dev.yaml down

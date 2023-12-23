@@ -10,7 +10,7 @@ services:
       - prometheus
     volumes:
       - ./config:/etc/nats-load-traffic
-    command: -c /etc/nats-load-traffic/config.yaml
+    command: -c /etc/nats-load-traffic/config.yaml -p /etc/nats-load-traffic/msg.json
 
   prometheus:
     image: prom/prometheus:latest

@@ -4,33 +4,33 @@ log:
 
 remote_write:
   enabled: true
-  url: http://localhost:9090/api/v1/write
+  url: http://prometheus:9090/api/v1/write
   interval: 5s
 
 nats:
-  url: nats://127.0.0.1:4222
+  url: nats://nats:4222
 
 profiles:
   - name: job-1
     subject: test.1
     load: rare
-    rate: 1000
-    duration: 1000s
+    rate: 600
+    duration: 10m
 
   - name: job-2
     subject: test.2
     load: periodic
-    rate: 1000
-    duration: 1000s
+    rate: 600
+    duration: 10m
 
   - name: job-3
     subject: test.3
     load: random
-    rate: 1000
-    duration: 1000s
+    rate: 600
+    duration: 10m
 
   - name: job-4
     subject: test.4
     load: constant
-    rate: 1000
-    duration: 1000s
+    rate: 600
+    duration: 10m
