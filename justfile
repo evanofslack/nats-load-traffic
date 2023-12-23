@@ -27,3 +27,6 @@ down:
 
 infra:
     cd examples && docker compose -f docker-compose-dev.yaml  up -d prometheus nats && docker compose -f docker-compose-dev.yaml logs --follow
+
+log:
+    cd examples && docker compose -f docker-compose-dev.yaml logs --follow
