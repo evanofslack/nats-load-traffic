@@ -116,11 +116,10 @@ func Run(configPath, payloadPath string) {
 
 	var totalOk uint64
 	var totalErr uint64
-	slog.Info("-- report --")
 	for _, sub := range metrics.Report() {
-		slog.Info(fmt.Sprintf("%s | ok %d | err %d |\n", sub.Subject, sub.Success, sub.Failure))
+		slog.Info("submission count for subject", slog.String("subject", sub.Subject), slog.Uint64("success", sub.Success), slog.Uint64("failure", sub.Failure))
 		totalOk += sub.Success
 		totalErr += sub.Failure
 	}
-	slog.Info(fmt.Sprintf("TOTAL | ok %d | err %d |\n", totalOk, totalErr))
+	slog.Info("total submission count for all subjects", slog.Uint64("success", totalOk), slog.Uint64("failure", totalErr))
 }
