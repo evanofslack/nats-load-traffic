@@ -38,7 +38,7 @@ Alternatively, build the executable from source
 
 ```bash
 git clone https://github.com/evanofslack/nats-load-traffic
-cd prom-relabel-proxy/cmd/nats-load-traffic
+cd nats-load-traffic/cmd/nats-load-traffic
 go build ./...
 ```
 
